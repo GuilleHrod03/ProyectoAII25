@@ -1,7 +1,17 @@
-import urllib.request 
-from tkinter import Tk, Button, Toplevel, Label, END, LEFT, BOTH, RIGHT, Listbox, Menu, Entry, Spinbox, Scrollbar, messagebox
 from bs4 import BeautifulSoup
-import sqlite3
+import urllib.request
+from tkinter import *
+from tkinter import messagebox
+import re, shutil
+import whoosh
+import whoosh.fields
+from whoosh.index import create_in,open_dir
+from whoosh.fields import Schema, TEXT, NUMERIC, KEYWORD, ID
+from whoosh.qparser import QueryParser
+
+from whoosh.index import create_in,open_dir
+from whoosh.fields import Schema, TEXT, DATETIME, KEYWORD, ID,NUMERIC
+from whoosh.qparser import QueryParser, MultifieldParser, OrGroup
 
 import os, ssl
 if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
@@ -9,7 +19,6 @@ getattr(ssl, '_create_unverified_context', None)):
     ssl._create_default_https_context = ssl._create_unverified_context 
 #Para evitar problemas con BeautifulSoup
 
-conn = sqlite3.connect('consolas.db')
 
 root = Tk()
 menu = Menu(root)
@@ -18,206 +27,159 @@ menu = Menu(root)
 
 
 # Cargar
-def crear_esquema():
-    return 0
+def almacenar_datos():
+    #Creamos el esquema
+    schem = Schema(
+        url=ID(stored=True),  # URL única para cada juego
+        nombre=TEXT(stored=True),  # Nombre del juego
+        precio=NUMERIC(stored=True, numtype=float),  # Precio del juego
+        generos=KEYWORD(stored=True, commas=True),  # Géneros como palabras clave (pueden ser múltiples)
+        tags=KEYWORD(stored=True, commas=True),  # Tags como palabras clave (pueden ser múltiples)
+        companias=KEYWORD(stored=True, commas=True),  # Compañías como palabras clave (pueden ser múltiples)
+        fecha_lanzamiento=TEXT(stored=True),  # Fecha de lanzamiento
+        sistema_operativo=TEXT(stored=True),  # Sistema operativo
+        calificacion=NUMERIC(stored=True, numtype=float) # Calificación general
+    )
+    #Creamos el índice
+    if os.path.exists("Index"):
+        shutil.rmtree("Index")
+    os.mkdir("Index")
 
+        #creamos el índice
+    ix = create_in("Index", schema=schem)
+    #creamos un writer para poder añadir documentos al indice
+    writer = ix.writer()
+    i=0
+    lista=almacenar_juegos()
+    for juego in lista:
+        writer.add_document(url=str(juego[0]), nombre=str(juego[1]), precio=float(juego[2]), generos=str(juego[3]), tags=str(juego[4]), companias=str(juego[5]), fecha_lanzamiento=juego[6], sistema_operativo=str(juego[7]), calificacion=float(juego[8]))
+        i+=1
+    writer.commit()
+    messagebox.showinfo("Fin de indexado", "Se han indexado "+str(i)+ " juegos")   
 
-def almacenar_consolas():
-    f = urllib.request.urlopen("https://es.wikipedia.org/wiki/Anexo:Consolas_de_Nintendo")
+def almacenar_juegos():
+    f = urllib.request.urlopen("https://www.gog.com/en/games")
+
+    lista =[]
 
     soup = BeautifulSoup(f, "lxml")
 
-    datos = soup.find("table", class_="wikitable").find("tbody").find_all("tr")
-    consolas = []
+    datos = soup.find("div", class_="paginated-products-grid grid").find_all("product-tile")
 
-    flag = 0
+    for juego in datos: 
+            generos=[]
+            tags=[]
+            companias=[]
+            url=juego.find("a")["href"]
+            print(url)
 
-    for consola in datos:
-        if flag == 0:
-            flag += 1
-        else:
-            nombre = consola.find("td").a.text
-            años = consola.find("td").find_next_sibling().find_next_sibling().text.strip()
-            unidades = consola.find("td").find_next_sibling().find_next_sibling().find_next_sibling().text.strip()
-            if "millones" in unidades:
-                unidades = float(unidades.split(" ")[0].replace(',', '.')) * 1000000
-            elif "mil" in unidades:
-                unidades = float(unidades.split(" ")[0].replace(',', '.')) * 1000
-            elif "?" in unidades:
-                unidades = 0
-                
-            url = "https://es.wikipedia.org/" + consola.find("td").a["href"]
             f2 = urllib.request.urlopen(url)
             soup2 = BeautifulSoup(f2, "lxml")
-            
-            tabla = soup2.find("table", class_="infobox").find("tbody")
-            tipo = tabla.find("th", string="Tipo").find_next("td").text.strip()
+            #NOMBRE
+            nombre = soup2.find("h1", class_="productcard-basics__title").text.strip()
+            print(nombre)
 
-            if nombre == "Nintendo Switch":
-                generacion1 = tabla.find("th", string="Generación").find_next("td").a.text
-                generacion2 = tabla.find("th", string="Generación").find_next("td").a.find_next_sibling().text
-                generacion = f"{generacion1}/{generacion2}"
-            elif tabla.find("th", string="Generación"):
-                generacion = tabla.find("th", string="Generación").find_next("td").text.strip()
+            #PRECIO
+            precio = soup2.find(attrs={"selenium-id": "ProductFinalPrice"}).text.strip()
+            print(precio)
+
+            #GENEROS
+            genero = soup2.find("div", class_="details__content table__row-content").find_all("a")
+            for i in genero:
+                generos.append(i.text)
+            print(generos)
+
+            #TAGS
+            tag = soup2.find(attrs={"selenium-id": "ProductTags"}).find("div",class_="details__content table__row-content").find_all("span", class_="details__link-text")
+            for i in tag:
+                tags.append(i.text)
+            print(tags)    
+
+            #COMPANIAS
+            # Encuentra el siguiente hermano que contiene los enlaces a las compañías
+            compania=soup2.find("div", class_="table__row details__rating details__row").next_sibling.next_sibling.find_all("a")
+            for i in compania:
+                companias.append(i.text)
+            print(companias)
+
+            #FECHALANZAMIENTO
+            FechasinParseado=soup2.find("div", class_="table__row details__rating details__row").next_sibling.text.strip()
+            match = re.search(r"(\d{4}-\d{2}-\d{2})", FechasinParseado)
+            Fecha = match.group(1)
+            print(Fecha)
+            #WORKSON
+            SistemaOperativo=soup2.find("div", class_="table__row details__rating details__row").find("div",class_="details__content table__row-content").text.strip()
+            print(SistemaOperativo)
+            #OverallRating
+            if soup2.find("div",class_="rating productcard-rating__score") is not None:
+                OverallRating=soup2.find("div",class_="rating productcard-rating__score").text.strip().split("/")[0]
             else:
-                generacion = "Desconocido"
-            desarrollador = tabla.find("th", string="Desarrollador").find_next("td").text.strip()
-            conn.execute("""INSERT INTO CONSOLAS (NOMBRE, ANYOS, UNIDADES, TIPO, GENERACION, DESARROLLADOR) VALUES (?,?,?,?,?,?)""",
-                     (nombre,años,unidades,tipo,generacion,desarrollador))
-            conn.commit()
-    cursor = conn.execute("SELECT COUNT(*) FROM CONSOLAS")
-    messagebox.showinfo( "Base Datos", "Base de datos creada correctamente \nHay " + str(cursor.fetchone()[0]) + " registros")
+                OverallRating=0.0
+
+            print(OverallRating)
+            print("-------------------------------------------------")
+            lista.append((url,nombre,precio,generos,tags,companias,Fecha,SistemaOperativo,OverallRating))
+    return lista
+
 
 def cargar():
-
-    almacenar_consolas()
+    almacenar_datos()
      
 
 # Listar
-def listar_consolas():
-    conn = sqlite3.connect("consolas.db")
-    cursor = conn.cursor()
-    # mostrar todos los datos en una ventana con listbox y scrollbar
-    nueva_ventana = Toplevel()
-    nueva_ventana.title("Listado de consolas")
-    cursor.execute("SELECT * FROM CONSOLAS")
 
-    lb = Listbox(nueva_ventana)
+def imprimir_lista(cursor):
+    v = Toplevel()
+    v.title("JUEGOS DE GOG")
+    sc = Scrollbar(v)
+    sc.pack(side=RIGHT, fill=Y)
+    lb = Listbox(v, width = 150, yscrollcommand=sc.set)
     for row in cursor:
-        lb.insert(END, f"Nombre: {row[0]}")
-        lb.insert(END, f"Años: {row[1]}")
-        lb.insert(END, f"Unidades: {row[2]}")
-        lb.insert(END, f"Tipo: {row[3]}")
-        lb.insert(END, f"Generacion: {row[4]}")
-        lb.insert(END, f"Desarrollador: {row[5]}")
-        lb.insert(END, "")
-
-    lb.pack(side=LEFT, fill=BOTH, expand=True)
-
-    # Scrollbar
-    # Creación scrollbar
-    sc = Scrollbar(nueva_ventana)
-    sc.pack(side = RIGHT, fill = BOTH) 
-
-    # Configuración del scrollbar, sobre lb y su comando ("lb.yview")
-    lb.config(yscrollcommand = sc.set) 
+        lb.insert(END,row[0])
+        lb.insert(END,"    Precio: "+ str(row[1]))
+        lb.insert(END,"    Generos: "+ str(row[2]))
+        lb.insert(END,"    Tags: "+ str(row[3]))
+        lb.insert(END,"    Companyas: "+ str(row[4]))
+        lb.insert(END,"    Fecha de lanzamiento: "+ str(row[5]))
+        lb.insert(END,"    Sistemas Operativos: "+ str(row[6]))
+        lb.insert(END,"    Calificacion: "+ str(row[7]))
+        lb.insert(END,"")
+    lb.pack(side=LEFT,fill=BOTH)
     sc.config(command = lb.yview)
 
+def listar_juegos():
+    # Abrimos el índice creado previamente
+    ix = open_dir("Index")
+    
+    # Creamos un buscador para la búsqueda
+    searcher = ix.searcher()
+    
+    # Usamos una consulta simple para recuperar todos los documentos (juegos)
+    query = QueryParser("nombre", ix.schema).parse("*")  # '*' indica que buscamos todos los documentos
+    results = searcher.search(query)
+    
+    # Creamos una lista con los resultados para mostrar
+    juegos_lista = []
+    for result in results:
+        juegos_lista.append((
+            result['nombre'],
+            result['precio'],
+            result['generos'],
+            result['tags'],
+            result['companias'],
+            result['fecha_lanzamiento'],
+            result['sistema_operativo'],
+            result['calificacion']
+        ))
+    
+    searcher.close()
+    
+    # Llamamos a la función para imprimir la lista de juegos
+    imprimir_lista(juegos_lista)
 # Listar mejores
-def listar_mejores_consolas():
-    conn = sqlite3.connect("consolas.db")
-    cursor = conn.cursor()
-    # mostrar todos los datos en una ventana con listbox y scrollbar
-    nueva_ventana = Toplevel()
-    nueva_ventana.title("Listado de las mejores 5 consolas")
-    cursor.execute("SELECT * "
-                   "FROM CONSOLAS "
-                   "ORDER BY UNIDADES DESC "
-                   "LIMIT 5;")
+def listar_mejores_juegos():
+    return 0
 
-    lb = Listbox(nueva_ventana)
-    for row in cursor:
-        lb.insert(END, f"Nombre: {row[0]}")
-        lb.insert(END, f"Años: {row[1]}")
-        lb.insert(END, f"Unidades: {row[2]}")
-        lb.insert(END, f"Tipo: {row[3]}")
-        lb.insert(END, f"Generacion: {row[4]}")
-        lb.insert(END, f"Desarrollador: {row[5]}")
-
-        lb.insert(END, "")
-
-    lb.pack(side=LEFT, fill=BOTH, expand=True)
-
-    # Scrollbar
-    # Creación scrollbar
-    sc = Scrollbar(nueva_ventana)
-    sc.pack(side = RIGHT, fill = BOTH) 
-
-    # Configuración del scrollbar, sobre lb y su comando ("lb.yview")
-    lb.config(yscrollcommand = sc.set) 
-    sc.config(command = lb.yview)
-
-#Buscar generacion
-def mostrar_seleccion_generacion(event, entry):
-    cursor = conn.cursor()
-    nueva_ventana = Toplevel()
-    
-    generacion = entry.get()
-    cursor.execute ("SELECT * FROM CONSOLAS WHERE GENERACION LIKE ?", (generacion,))
-
-    lb = Listbox(nueva_ventana)
-
-    lb.insert(END, f"Generacion {generacion}")
-    lb.insert(END, "----------------------------")
-    for row in cursor:
-        lb.insert(END, f"{row[0]},{row[1]},{row[2]},{row[3]},{row[4]},{row[5]}")
-    lb.insert(END, "")
-
-    lb.pack(side=LEFT, fill=BOTH, expand=True)
-
-    # Scrollbar
-    # Creación scrollbar
-    sc = Scrollbar(nueva_ventana)
-    sc.pack(side = RIGHT, fill = BOTH) 
-
-    # Configuración del scrollbar, sobre lb y su comando ("lb.yview")
-    lb.config(yscrollcommand = sc.set) 
-    sc.config(command = lb.yview) 
-
-def buscar_generacion():
-    nueva_ventana = Toplevel()
-    nueva_ventana.title("Busqueda por generacion")
-    
-    Label(nueva_ventana, text="Seleccione una generacion").pack()
-    cursor = conn.execute("""SELECT DISTINCT GENERACION FROM CONSOLAS""")
-    valores=[i[0] for i in cursor]
-    
-    lb = Label(nueva_ventana, text="Seleccione la generacion: ")
-    lb.pack(side = LEFT)
-    en = Spinbox(nueva_ventana,values=valores,state="readonly")
-    en.bind("<Return>", lambda event: mostrar_seleccion_generacion(event, en))
-    en.pack(side = LEFT)
-
-# Buscar tipo
-def mostrar_seleccion_tipo(event, entry):
-    cursor = conn.cursor()
-    nueva_ventana = Toplevel()
-    
-    generacion = entry.get()
-    cursor.execute ("SELECT * FROM CONSOLAS WHERE TIPO LIKE ?", (generacion,))
-
-    lb = Listbox(nueva_ventana)
-
-    lb.insert(END, f"TIPO: {generacion}")
-    lb.insert(END, "----------------------------")
-    for row in cursor:
-        lb.insert(END, f"{row[0]},{row[1]},{row[2]},{row[3]},{row[4]},{row[5]}")
-    lb.insert(END, "")
-
-    lb.pack(side=LEFT, fill=BOTH, expand=True)
-
-    # Scrollbar
-    # Creación scrollbar
-    sc = Scrollbar(nueva_ventana)
-    sc.pack(side = RIGHT, fill = BOTH) 
-
-    # Configuración del scrollbar, sobre lb y su comando ("lb.yview")
-    lb.config(yscrollcommand = sc.set) 
-    sc.config(command = lb.yview) 
-
-def buscar_tipo():
-    nueva_ventana = Toplevel()
-    nueva_ventana.title("Busqueda por generacion")
-    
-    Label(nueva_ventana, text="Seleccione una generacion").pack()
-    cursor = conn.execute("""SELECT DISTINCT TIPO FROM CONSOLAS""")
-    valores=[i[0] for i in cursor]
-    
-    lb = Label(nueva_ventana, text="Seleccione la tipo: ")
-    lb.pack(side = LEFT)
-    en = Spinbox(nueva_ventana,values=valores,state="readonly")
-    en.bind("<Return>", lambda event: mostrar_seleccion_tipo(event, en))
-    en.pack(side = LEFT)
 
 # DATOS
 menudatos = Menu(menu, tearoff=0)
@@ -227,15 +189,9 @@ menu.add_cascade(label="Datos", menu=menudatos)
 
 # LISTAR
 menubuscar = Menu(menu, tearoff=0)
-menubuscar.add_command(label="Consolas", command=listar_consolas)
-menubuscar.add_command(label="Mejores consolas", command=listar_mejores_consolas)
+menubuscar.add_command(label="juegos", command=listar_juegos)
+menubuscar.add_command(label="Mejores juegos", command=listar_mejores_juegos)
 menu.add_cascade(label="Listar", menu=menubuscar)
-
-# BUSCAR
-menubuscar = Menu(menu, tearoff=0)
-menubuscar.add_command(label="Por generación", command=buscar_generacion)
-menubuscar.add_command(label="Por tipo", command=buscar_tipo)
-menu.add_cascade(label="Buscar", menu=menubuscar)
 
 root.config(menu=menu)
 root.mainloop()
