@@ -156,7 +156,7 @@ def listar_juegos():
     
     # Usamos una consulta simple para recuperar todos los documentos (juegos)
     query = QueryParser("nombre", ix.schema).parse("*")  # '*' indica que buscamos todos los documentos
-    results = searcher.search(query)
+    results = searcher.search(query, limit=None)
     
     # Creamos una lista con los resultados para mostrar
     juegos_lista = []
@@ -177,6 +177,7 @@ def listar_juegos():
     # Llamamos a la función para imprimir la lista de juegos
     imprimir_lista(juegos_lista)
 # Listar mejores
+
 def listar_mejores_juegos():
     return 0
 
