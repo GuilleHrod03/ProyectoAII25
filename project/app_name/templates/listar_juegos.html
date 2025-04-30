@@ -178,19 +178,26 @@
             gap: 15px;
         }
         
-        .search-input {
-            width: 60%;
-            padding: 12px 20px;
+        .search-btn {
+            background-color: var(--accent);
+            color: white;
             border: none;
             border-radius: 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 12px 25px;
             font-size: 1rem;
-            outline: none;
-            transition: box-shadow 0.3s ease;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
-        .search-input:focus {
-            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        .search-btn:hover {
+            background-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         
         .load-btn {
@@ -198,17 +205,20 @@
             color: white;
             border: none;
             border-radius: 30px;
-            padding: 0 25px;
+            padding: 12px 25px;
             font-size: 1rem;
             cursor: pointer;
-            transition: background-color 0.3s ease;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
         
         .load-btn:hover {
             background-color: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
         }
         
         .load-btn i {
@@ -247,19 +257,14 @@
                 grid-template-columns: 1fr;
             }
             
-            .search-input {
-                width: 90%;
-            }
-            
             .search-bar {
                 flex-direction: column;
                 align-items: center;
             }
             
-            .load-btn {
-                width: 60%;
+            .search-btn, .load-btn {
+                width: 80%;
                 justify-content: center;
-                padding: 12px;
             }
         }
     </style>
@@ -274,7 +279,10 @@
     
     <div class="container">
         <div class="search-bar">
-            <input type="text" class="search-input" placeholder="Buscar juegos por nombre, género o compañía...">
+            <a href="{% url 'buscar' %}" class="search-btn">
+                <i class="fas fa-search"></i>
+                Buscar Juegos
+            </a>
             <button class="load-btn" id="loadDataBtn">
                 <i class="fas fa-download"></i>
                 Cargar Datos
@@ -360,8 +368,7 @@
             btn.classList.add('loading');
             btn.disabled = true;
             
-            // Cambia esta línea para usar la URL correcta
-            fetch('{% url "almacenar_datos" %}', {  // Usa la template tag de URL
+            fetch('{% url "almacenar_datos" %}', {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': '{{ csrf_token }}',

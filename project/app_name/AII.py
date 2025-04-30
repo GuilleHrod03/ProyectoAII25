@@ -53,50 +53,52 @@ def almacenar_datos():
     guardar_en_sqlite(lista)
     print(f"Se han indexado y guardado {len(lista)} juegos.")
 
-def almacenar_juegos():
-    f = urllib.request.urlopen("https://www.gog.com/en/games")
-    soup = BeautifulSoup(f, "lxml")
-    datos = soup.find("div", class_="paginated-products-grid grid").find_all("product-tile")
-
+def almacenar_juegos(n=5):
     lista = []
-    for juego in datos: 
-        generos = []
-        tags = []
-        companias = []
-        url = juego.find("a")["href"]
-        print("Procesando:", url)
+    for i in range(1, n):
+        print(f"------------------------------Descargando página {i}...------------------------------")
+        f = urllib.request.urlopen(f"https://www.gog.com/en/games?page={i}")
+        soup = BeautifulSoup(f, "lxml")
+        datos = soup.find("div", class_="paginated-products-grid grid").find_all("product-tile")
 
-        f2 = urllib.request.urlopen(url)
-        soup2 = BeautifulSoup(f2, "lxml")
+        for juego in datos: 
+            generos = []
+            tags = []
+            companias = []
+            url = juego.find("a")["href"]
+            print("Procesando:", url)
 
-        nombre = soup2.find("h1", class_="productcard-basics__title").text.strip()
+            f2 = urllib.request.urlopen(url)
+            soup2 = BeautifulSoup(f2, "lxml")
 
-        precio = soup2.find(attrs={"selenium-id": "ProductFinalPrice"}).text.strip()
+            nombre = soup2.find("h1", class_="productcard-basics__title").text.strip()
 
-        genero = soup2.find("div", class_="details__content table__row-content").find_all("a")
-        for i in genero:
-            generos.append(i.text)
+            precio = soup2.find(attrs={"selenium-id": "ProductFinalPrice"}).text.strip()
 
-        tag = soup2.find(attrs={"selenium-id": "ProductTags"}).find("div", class_="details__content table__row-content").find_all("span", class_="details__link-text")
-        for i in tag:
-            tags.append(i.text)
+            genero = soup2.find("div", class_="details__content table__row-content").find_all("a")
+            for i in genero:
+                generos.append(i.text)
 
-        compania = soup2.find("div", class_="table__row details__rating details__row").next_sibling.next_sibling.find_all("a")
-        for i in compania:
-            companias.append(i.text)
+            tag = soup2.find(attrs={"selenium-id": "ProductTags"}).find("div", class_="details__content table__row-content").find_all("span", class_="details__link-text")
+            for i in tag:
+                tags.append(i.text)
 
-        FechasinParseado = soup2.find("div", class_="table__row details__rating details__row").next_sibling.text.strip()
-        match = re.search(r"(\d{4}-\d{2}-\d{2})", FechasinParseado)
-        Fecha = match.group(1) if match else "0000-00-00"
+            compania = soup2.find("div", class_="table__row details__rating details__row").next_sibling.next_sibling.find_all("a")
+            for i in compania:
+                companias.append(i.text)
 
-        SistemaOperativo = soup2.find("div", class_="table__row details__rating details__row").find("div", class_="details__content table__row-content").text.strip()
+            FechasinParseado = soup2.find("div", class_="table__row details__rating details__row").next_sibling.text.strip()
+            match = re.search(r"(\d{4}-\d{2}-\d{2})", FechasinParseado)
+            Fecha = match.group(1) if match else "0000-00-00"
 
-        if soup2.find("div", class_="rating productcard-rating__score") is not None:
-            OverallRating = soup2.find("div", class_="rating productcard-rating__score").text.strip().split("/")[0]
-        else:
-            OverallRating = 0.0
+            SistemaOperativo = soup2.find("div", class_="table__row details__rating details__row").find("div", class_="details__content table__row-content").text.strip()
 
-        lista.append((url, nombre, precio, generos, tags, companias, Fecha, SistemaOperativo, OverallRating))
+            if soup2.find("div", class_="rating productcard-rating__score") is not None:
+                OverallRating = soup2.find("div", class_="rating productcard-rating__score").text.strip().split("/")[0]
+            else:
+                OverallRating = 0.0
+
+            lista.append((url, nombre, precio, generos, tags, companias, Fecha, SistemaOperativo, OverallRating))
     return lista
 
 def guardar_en_sqlite(lista):

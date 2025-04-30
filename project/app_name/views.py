@@ -7,9 +7,6 @@ from django.shortcuts import render
 from .AII import almacenar_datos 
 from django.views.decorators.csrf import csrf_exempt
 
-@csrf_exempt  # Añade este decorador si no estás enviando el CSRF token
-@require_POST
-
 
 def listar_juegos(request):
     conn = sqlite3.connect("db.sqlite3")
@@ -34,6 +31,9 @@ def listar_juegos(request):
     return render(request, 'listar_juegos.html', {'juegos': juegos_dicts})
 
 
+@csrf_exempt  # Añade este decorador si no estás enviando el CSRF token
+@require_POST
+
 def almacenar(request):
     try:
         almacenar_datos()
@@ -42,7 +42,7 @@ def almacenar(request):
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
 
 def buscar(request):
-    query = request.GET.get('q', '')
+    query = request.GET.get('q', '').strip()  # Limpia espacios en blanco
     resultados = []
     
     if query:
@@ -51,13 +51,12 @@ def buscar(request):
         cursor.execute("""
             SELECT nombre, precio, generos, tags, companias, fecha_lanzamiento, sistema_operativo, calificacion 
             FROM juegos 
-            WHERE nombre LIKE ? OR generos LIKE ? OR tags LIKE ? OR companias LIKE ?
-        """, (f'%{query}%', f'%{query}%', f'%{query}%', f'%{query}%'))
+            WHERE nombre LIKE ?
+        """, (f'{query}%',))  # El % solo al final para que empiece con el texto
         
         resultados = cursor.fetchall()
         conn.close()
         
-        # Convertir a diccionarios como en listar_juegos
         resultados = [{
             'nombre': juego[0],
             'precio': juego[1],
