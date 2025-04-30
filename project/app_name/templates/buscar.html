@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub - Buscar Juegos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #1b263b;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --gray: #adb5bd;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1, h2, h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-weight: 300;
+            margin-top: 0.5rem;
+            opacity: 0.9;
+        }
+        
+        /* Estilos para el formulario de búsqueda */
+        .search-container {
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+        }
+        
+        .search-form {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        .search-input {
+            flex: 1;
+            padding: 15px 25px;
+            border: 2px solid #e9ecef;
+            border-radius: 30px;
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+        
+        .search-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(72, 149, 239, 0.2);
+        }
+        
+        .search-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 0 30px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .search-btn:hover {
+            background-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        /* Resultados de búsqueda */
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .results-count {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .game-card {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+        
+        .game-header {
+            position: relative;
+            height: 180px;
+            background: linear-gradient(45deg, #3a0ca3, #4361ee);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            padding: 0 20px;
+            text-align: center;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .game-body {
+            padding: 20px;
+        }
+        
+        .game-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .game-price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .game-detail {
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--dark);
+            margin-right: 5px;
+        }
+        
+        .badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        
+        .genre-badge {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .tag-badge {
+            background-color: rgba(247, 37, 133, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+        
+        .rating {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .stars {
+            color: #ffc107;
+            margin-right: 8px;
+        }
+        
+        .rating-value {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .os-icon {
+            margin-right: 5px;
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .no-results-icon {
+            font-size: 3rem;
+            color: var(--gray);
+            margin-bottom: 20px;
+        }
+        
+        @media (max-width: 768px) {
+            .search-form {
+                flex-direction: column;
+            }
+            
+            .search-btn {
+                justify-content: center;
+                padding: 15px;
+            }
+            
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>GameHub</h1>
+            <p class="subtitle">Encuentra los juegos que te interesan</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="search-container">
+            <h2>Buscar en nuestro catálogo</h2>
+            <p>Encuentra juegos por nombre, género, etiquetas o compañías</p>
+            
+            <form method="get" action="{% url 'buscar' %}" class="search-form">
+                <input type="text" name="q" value="{{ query }}" placeholder="Ej: The Witcher, RPG, CD Projekt..." class="search-input">
+                <button type="submit" class="search-btn">
+                    <i class="fas fa-search"></i>
+                    Buscar
+                </button>
+            </form>
+        </div>
+        
+        {% if query %}
+        <div class="results-section">
+            <div class="results-header">
+                <h3>Resultados de búsqueda</h3>
+                <span class="results-count">{{ resultados|length }} juegos encontrados</span>
+            </div>
+            
+            {% if resultados %}
+            <div class="games-grid">
+                {% for juego in resultados %}
+                <div class="game-card">
+                    <div class="game-header">
+                        <h2 class="game-title">{{ juego.nombre }}</h2>
+                    </div>
+                    
+                    <div class="game-body">
+                        <div class="game-meta">
+                            <span><i class="far fa-calendar-alt"></i> {{ juego.fecha_lanzamiento }}</span>
+                            <span>
+                                {% if juego.sistema_operativo == "Windows" %}
+                                    <i class="fab fa-windows os-icon"></i>
+                                {% elif juego.sistema_operativo == "macOS" %}
+                                    <i class="fab fa-apple os-icon"></i>
+                                {% elif juego.sistema_operativo == "Linux" %}
+                                    <i class="fab fa-linux os-icon"></i>
+                                {% endif %}
+                                {{ juego.sistema_operativo }}
+                            </span>
+                        </div>
+                        
+                        <div class="game-price">${{ juego.precio }}</div>
+                        
+                        <div class="game-detail">
+                            <span class="detail-label">Compañías:</span>
+                            {{ juego.companias|join:", " }}
+                        </div>
+                        
+                        <div class="game-detail">
+                            <span class="detail-label">Géneros:</span>
+                            <div class="badge-container">
+                                {% for genero in juego.generos %}
+                                    <span class="badge genre-badge">{{ genero }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="game-detail">
+                            <span class="detail-label">Tags:</span>
+                            <div class="badge-container">
+                                {% for tag in juego.tags %}
+                                    <span class="badge tag-badge">{{ tag }}</span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <div class="rating">
+                            <div class="stars">
+                                {% with ''|center:5 as range %}
+                                {% for _ in range %}
+                                    {% if forloop.counter <= juego.calificacion %}
+                                        <i class="fas fa-star"></i>
+                                    {% else %}
+                                        <i class="far fa-star"></i>
+                                    {% endif %}
+                                {% endfor %}
+                                {% endwith %}
+                            </div>
+                            <span class="rating-value">{{ juego.calificacion }}/5</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-results">
+                <div class="no-results-icon">
+                    <i class="far fa-frown"></i>
+                </div>
+                <h3>No encontramos juegos que coincidan</h3>
+                <p>Intenta con otros términos de búsqueda o revisa la ortografía</p>
+            </div>
+            {% endif %}
+        </div>
+        {% else %}
+        {% endif %}
+    </div>
+</body>
+</html>

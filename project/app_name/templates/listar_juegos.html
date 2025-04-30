@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub - Lista de Juegos</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #1b263b;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --gray: #adb5bd;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        h1 {
+            text-align: center;
+            margin: 0;
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-weight: 300;
+            margin-top: 0.5rem;
+            opacity: 0.9;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .game-card {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+        
+        .game-header {
+            position: relative;
+            height: 180px;
+            background: linear-gradient(45deg, #3a0ca3, #4361ee);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .game-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            padding: 0 20px;
+            text-align: center;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        }
+        
+        .game-body {
+            padding: 20px;
+        }
+        
+        .game-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .game-price {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+        
+        .game-detail {
+            margin-bottom: 10px;
+            font-size: 0.95rem;
+        }
+        
+        .detail-label {
+            font-weight: 600;
+            color: var(--dark);
+            margin-right: 5px;
+        }
+        
+        .badge-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 10px 0;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: capitalize;
+        }
+        
+        .genre-badge {
+            background-color: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .tag-badge {
+            background-color: rgba(247, 37, 133, 0.1);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+        
+        .rating {
+            display: flex;
+            align-items: center;
+            margin-top: 15px;
+        }
+        
+        .stars {
+            color: #ffc107;
+            margin-right: 8px;
+        }
+        
+        .rating-value {
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .os-icon {
+            margin-right: 5px;
+        }
+        
+        .search-bar {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            gap: 15px;
+        }
+        
+        .search-input {
+            width: 60%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            font-size: 1rem;
+            outline: none;
+            transition: box-shadow 0.3s ease;
+        }
+        
+        .search-input:focus {
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+        
+        .load-btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            padding: 0 25px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .load-btn:hover {
+            background-color: var(--secondary);
+        }
+        
+        .load-btn i {
+            transition: transform 0.3s ease;
+        }
+        
+        .load-btn.loading i {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--success);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transform: translateX(200%);
+            transition: transform 0.3s ease;
+            z-index: 1000;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .search-input {
+                width: 90%;
+            }
+            
+            .search-bar {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .load-btn {
+                width: 60%;
+                justify-content: center;
+                padding: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>GameHub</h1>
+            <p class="subtitle">Descubre los mejores juegos para tu colección</p>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="search-bar">
+            <input type="text" class="search-input" placeholder="Buscar juegos por nombre, género o compañía...">
+            <button class="load-btn" id="loadDataBtn">
+                <i class="fas fa-download"></i>
+                Cargar Datos
+            </button>
+        </div>
+        
+        <div class="games-grid">
+            {% for juego in juegos %}
+            <div class="game-card">
+                <div class="game-header">
+                    <h2 class="game-title">{{ juego.nombre }}</h2>
+                </div>
+                
+                <div class="game-body">
+                    <div class="game-meta">
+                        <span><i class="far fa-calendar-alt"></i> {{ juego.fecha_lanzamiento }}</span>
+                        <span>
+                            {% if juego.sistema_operativo == "Windows" %}
+                                <i class="fab fa-windows os-icon"></i>
+                            {% elif juego.sistema_operativo == "macOS" %}
+                                <i class="fab fa-apple os-icon"></i>
+                            {% elif juego.sistema_operativo == "Linux" %}
+                                <i class="fab fa-linux os-icon"></i>
+                            {% endif %}
+                            {{ juego.sistema_operativo }}
+                        </span>
+                    </div>
+                    
+                    <div class="game-price">${{ juego.precio }}</div>
+                    
+                    <div class="game-detail">
+                        <span class="detail-label">Compañías:</span>
+                        {{ juego.companias|join:", " }}
+                    </div>
+                    
+                    <div class="game-detail">
+                        <span class="detail-label">Géneros:</span>
+                        <div class="badge-container">
+                            {% for genero in juego.generos %}
+                                <span class="badge genre-badge">{{ genero }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="game-detail">
+                        <span class="detail-label">Tags:</span>
+                        <div class="badge-container">
+                            {% for tag in juego.tags %}
+                                <span class="badge tag-badge">{{ tag }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <div class="rating">
+                        <div class="stars">
+                            {% with ''|center:5 as range %}
+                            {% for _ in range %}
+                                {% if forloop.counter <= juego.calificacion %}
+                                    <i class="fas fa-star"></i>
+                                {% else %}
+                                    <i class="far fa-star"></i>
+                                {% endif %}
+                            {% endfor %}
+                            {% endwith %}
+                        </div>
+                        <span class="rating-value">{{ juego.calificacion }}/5</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="notification" id="notification">
+        Datos cargados exitosamente!
+    </div>
+
+    <script>
+        document.getElementById('loadDataBtn').addEventListener('click', function() {
+            const btn = this;
+            const notification = document.getElementById('notification');
+            
+            btn.classList.add('loading');
+            btn.disabled = true;
+            
+            // Cambia esta línea para usar la URL correcta
+            fetch('{% url "almacenar_datos" %}', {  // Usa la template tag de URL
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Error en la red');
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    notification.classList.add('show');
+                    setTimeout(() => {
+                        notification.classList.remove('show');
+                        window.location.reload();
+                    }, 1000);
+                } else {
+                    throw new Error(data.error || 'Error desconocido');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                notification.textContent = 'Error: ' + error.message;
+                notification.style.backgroundColor = 'var(--warning)';
+                notification.classList.add('show');
+                setTimeout(() => notification.classList.remove('show'), 3000);
+            })
+            .finally(() => {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>
