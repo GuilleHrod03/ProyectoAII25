@@ -58,7 +58,7 @@ def almacenar_datos():
     guardar_en_sqlite(lista)
     print(f"Se han indexado y guardado {len(lista)} juegos.")
 
-def almacenar_juegos(n=4):
+def almacenar_juegos(n=20):
     lista = []
     for i in range(1, n):
         print(f"------------------------------Descargando página {i}...------------------------------")
