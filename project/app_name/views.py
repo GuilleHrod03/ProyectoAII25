@@ -7,6 +7,9 @@ from django.shortcuts import render
 from .AII import almacenar_datos 
 from django.views.decorators.csrf import csrf_exempt
 
+def menu(request):
+    # Puedes añadir lógica adicional aquí si necesitas mostrar algún dato especial
+    return render(request, 'menu.html')
 
 def listar_juegos(request):
     conn = sqlite3.connect("db.sqlite3")
