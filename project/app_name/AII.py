@@ -8,7 +8,7 @@ from whoosh.fields import Schema, TEXT, NUMERIC, KEYWORD, ID
 import sqlite3
 import os
 import ssl
-
+from whoosh.analysis import StemmingAnalyzer, LowercaseFilter, RegexTokenizer
 if (not os.environ.get('PYTHONHTTPSVERIFY', '') and
     getattr(ssl, '_create_unverified_context', None)):
     ssl._create_default_https_context = ssl._create_unverified_context
@@ -18,6 +18,7 @@ def almacenar_datos():
     schema = Schema(
         url=ID(stored=True),
         nombre=TEXT(stored=True),
+        nombre_lower=TEXT(stored=True, analyzer=RegexTokenizer() | LowercaseFilter()),
         precio=NUMERIC(stored=True, numtype=float),
         generos=KEYWORD(stored=True, commas=True),
         tags=KEYWORD(stored=True, commas=True),
@@ -42,6 +43,7 @@ def almacenar_datos():
         writer.add_document(
             url=str(juego[0]),
             nombre=str(juego[1]),
+            nombre_lower=str(juego[1]).lower(),  # <-- Añade esta línea
             precio=float(juego[2]),
             generos=",".join(juego[3]),
             tags=",".join(juego[4]),
@@ -56,7 +58,7 @@ def almacenar_datos():
     guardar_en_sqlite(lista)
     print(f"Se han indexado y guardado {len(lista)} juegos.")
 
-def almacenar_juegos(n=10):
+def almacenar_juegos(n=4):
     lista = []
     for i in range(1, n):
         print(f"------------------------------Descargando página {i}...------------------------------")
