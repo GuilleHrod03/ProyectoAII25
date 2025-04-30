@@ -136,24 +136,39 @@
         
         .game-header {
             position: relative;
-            height: 180px;
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .game-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .game-card:hover .game-image {
+            transform: scale(1.03);
+        }
+        
+        .no-image {
             background: linear-gradient(45deg, #3a0ca3, #4361ee);
+            height: 100%;
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
         }
         
-        .game-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            padding: 0 20px;
-            text-align: center;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
-        }
-        
         .game-body {
             padding: 20px;
+        }
+        
+        .game-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark);
         }
         
         .game-meta {
@@ -294,10 +309,18 @@
                 {% for juego in resultados %}
                 <div class="game-card">
                     <div class="game-header">
-                        <h2 class="game-title">{{ juego.nombre }}</h2>
+                        {% if juego.img %}
+                            <img src="{{ juego.img }}" alt="{{ juego.nombre }}" class="game-image">
+                        {% else %}
+                            <div class="no-image">
+                                <i class="fas fa-gamepad fa-3x"></i>
+                            </div>
+                        {% endif %}
                     </div>
                     
                     <div class="game-body">
+                        <h3 class="game-name">{{ juego.nombre }}</h3>
+                        
                         <div class="game-meta">
                             <span><i class="far fa-calendar-alt"></i> {{ juego.fecha_lanzamiento }}</span>
                             <span>
@@ -365,7 +388,6 @@
             </div>
             {% endif %}
         </div>
-        {% else %}
         {% endif %}
     </div>
 </body>

@@ -24,7 +24,8 @@ def almacenar_datos():
         companias=KEYWORD(stored=True, commas=True),
         fecha_lanzamiento=TEXT(stored=True),
         sistema_operativo=TEXT(stored=True),
-        calificacion=NUMERIC(stored=True, numtype=float)
+        calificacion=NUMERIC(stored=True, numtype=float),
+        img=TEXT(stored=True)  # Descomentar si se necesita almacenar la imagen
     )
 
     # Crear carpeta del índice
@@ -47,13 +48,15 @@ def almacenar_datos():
             companias=",".join(juego[5]),
             fecha_lanzamiento=juego[6],
             sistema_operativo=str(juego[7]),
-            calificacion=float(juego[8])
+            calificacion=float(juego[8]),
+            img=str(juego[9])  # Descomentar si se necesita almacenar la imagen
+
         )
     writer.commit()
     guardar_en_sqlite(lista)
     print(f"Se han indexado y guardado {len(lista)} juegos.")
 
-def almacenar_juegos(n=5):
+def almacenar_juegos(n=10):
     lista = []
     for i in range(1, n):
         print(f"------------------------------Descargando página {i}...------------------------------")
@@ -65,6 +68,7 @@ def almacenar_juegos(n=5):
             generos = []
             tags = []
             companias = []
+            
             url = juego.find("a")["href"]
             print("Procesando:", url)
 
@@ -74,6 +78,9 @@ def almacenar_juegos(n=5):
             nombre = soup2.find("h1", class_="productcard-basics__title").text.strip()
 
             precio = soup2.find(attrs={"selenium-id": "ProductFinalPrice"}).text.strip()
+
+            img= soup2.find("img", class_="mobile-slider__image")["src"]
+            print("Imagen:", img)
 
             genero = soup2.find("div", class_="details__content table__row-content").find_all("a")
             for i in genero:
@@ -98,7 +105,7 @@ def almacenar_juegos(n=5):
             else:
                 OverallRating = 0.0
 
-            lista.append((url, nombre, precio, generos, tags, companias, Fecha, SistemaOperativo, OverallRating))
+            lista.append((url, nombre, precio, generos, tags, companias, Fecha, SistemaOperativo, OverallRating,img))
     return lista
 
 def guardar_en_sqlite(lista):
@@ -107,7 +114,7 @@ def guardar_en_sqlite(lista):
 
     c.execute('''
         CREATE TABLE IF NOT EXISTS juegos (
-            url TEXT PRIMARY KEY,
+            url TEXT PRIMARY KEY,         
             nombre TEXT,
             precio REAL,
             generos TEXT,
@@ -115,7 +122,8 @@ def guardar_en_sqlite(lista):
             companias TEXT,
             fecha_lanzamiento TEXT,
             sistema_operativo TEXT,
-            calificacion REAL
+            calificacion REAL,
+            img TEXT              
         )
     ''')
 
@@ -123,8 +131,8 @@ def guardar_en_sqlite(lista):
         c.execute('''
             INSERT OR REPLACE INTO juegos (
                 url, nombre, precio, generos, tags, companias, 
-                fecha_lanzamiento, sistema_operativo, calificacion
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                fecha_lanzamiento, sistema_operativo, calificacion,img
+            ) VALUES (?,?, ?, ?, ?, ?, ?, ?, ?, ?)
         ''', (
             juego[0],
             juego[1],
@@ -134,7 +142,8 @@ def guardar_en_sqlite(lista):
             ",".join(juego[5]),
             juego[6],
             juego[7],
-            float(juego[8]) if juego[8] else 0.0
+            float(juego[8]) if juego[8] else 0.0,
+            juego[9]
         ))
 
     conn.commit()

@@ -77,24 +77,30 @@
         
         .game-header {
             position: relative;
-            height: 180px;
-            background: linear-gradient(45deg, #3a0ca3, #4361ee);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
+            height: 200px;
+            overflow: hidden;
         }
         
-        .game-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            padding: 0 20px;
-            text-align: center;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+        .game-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .game-card:hover .game-image {
+            transform: scale(1.03);
         }
         
         .game-body {
             padding: 20px;
+        }
+        
+        .game-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark);
         }
         
         .game-meta {
@@ -252,6 +258,15 @@
             transform: translateX(0);
         }
         
+        .no-image {
+            background: linear-gradient(45deg, #3a0ca3, #4361ee);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
         @media (max-width: 768px) {
             .games-grid {
                 grid-template-columns: 1fr;
@@ -293,10 +308,18 @@
             {% for juego in juegos %}
             <div class="game-card">
                 <div class="game-header">
-                    <h2 class="game-title">{{ juego.nombre }}</h2>
+                    {% if juego.img %}
+                        <img src="{{ juego.img }}" alt="{{ juego.nombre }}" class="game-image">
+                    {% else %}
+                        <div class="no-image">
+                            <i class="fas fa-gamepad fa-3x"></i>
+                        </div>
+                    {% endif %}
                 </div>
                 
                 <div class="game-body">
+                    <h3 class="game-name">{{ juego.nombre }}</h3>
+                    
                     <div class="game-meta">
                         <span><i class="far fa-calendar-alt"></i> {{ juego.fecha_lanzamiento }}</span>
                         <span>

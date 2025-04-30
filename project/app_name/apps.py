@@ -20,7 +20,8 @@ class MiAppConfig(AppConfig):
                 companias TEXT,
                 fecha_lanzamiento TEXT,
                 sistema_operativo TEXT,
-                calificacion REAL
+                calificacion REAL,
+                img TEXT
             )
         ''')
         conn.commit()

@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 def listar_juegos(request):
     conn = sqlite3.connect("db.sqlite3")
     cursor = conn.cursor()
-    cursor.execute("SELECT nombre, precio, generos, tags, companias, fecha_lanzamiento, sistema_operativo, calificacion FROM juegos")
+    cursor.execute("SELECT nombre, precio, generos, tags, companias, fecha_lanzamiento, sistema_operativo, calificacion, img FROM juegos")
     juegos = cursor.fetchall()
     conn.close()
 
@@ -26,6 +26,7 @@ def listar_juegos(request):
             'fecha_lanzamiento': juego[5],
             'sistema_operativo': juego[6],
             'calificacion': juego[7],
+            'img': juego[8],
         })
 
     return render(request, 'listar_juegos.html', {'juegos': juegos_dicts})
@@ -49,7 +50,7 @@ def buscar(request):
         conn = sqlite3.connect("db.sqlite3")
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT nombre, precio, generos, tags, companias, fecha_lanzamiento, sistema_operativo, calificacion 
+            SELECT nombre, precio, generos, tags, companias, fecha_lanzamiento, sistema_operativo, calificacion,img
             FROM juegos 
             WHERE nombre LIKE ?
         """, (f'{query}%',))  # El % solo al final para que empiece con el texto
@@ -66,6 +67,7 @@ def buscar(request):
             'fecha_lanzamiento': juego[5],
             'sistema_operativo': juego[6],
             'calificacion': juego[7],
+            'img': juego[8],
         } for juego in resultados]
     
     return render(request, 'buscar.html', {
