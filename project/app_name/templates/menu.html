@@ -172,6 +172,25 @@
                 <p>Filtra los juegos según un campo especifico.</p>
                 <a href="{% url 'filtrado' %}" class="menu-btn">Buscar Ahora</a>
             </div>
+
+            <div class="menu-card">
+                <div class="menu-icon">
+                    <i class="fas fa-robot"></i>  <!-- Cambiamos el icono -->
+                </div>
+                <h3>Cargar Sistema Recomendación</h3>
+                <p>Actualiza las recomendaciones personalizadas.</p>
+                <button class="menu-btn" id="loadRecSysBtn">Cargar RS</button>
+            </div>
+
+            <div class="menu-card">
+                <div class="menu-icon">
+                    <i class="fas fa-search"></i>
+                </div>
+                <h3>Recomendaciones</h3>
+                <p>Recomendaciones.</p>
+                <a href="{% url 'recomendacionesusuarios' %}" class="menu-btn">Recomendaciones</a>
+            </div>
+
         </div>
     </div>
 
@@ -221,5 +240,69 @@
             });
         });
     </script>
+
+<script>
+    // ... (mantén el script existente para cargar datos) ...
+
+    // Añade este nuevo script para el sistema de recomendación
+    document.getElementById('loadRecSysBtn').addEventListener('click', function() {
+        const btn = this;
+        const notification = document.createElement('div');
+        notification.id = 'notification';
+        notification.style = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background-color: var(--success);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        `;
+        document.body.appendChild(notification);
+        
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Cargando...';
+        
+        fetch('{% url "cargar_recomendaciones" %}', {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Error en la red');
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data.success) {
+                notification.textContent = data.message;
+                notification.style.backgroundColor = 'var(--success)';
+            } else {
+                throw new Error(data.error || 'Error desconocido');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            notification.textContent = 'Error: ' + error.message;
+            notification.style.backgroundColor = 'var(--warning)';
+        })
+        .finally(() => {
+            notification.style.opacity = '1';
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+            btn.disabled = false;
+            btn.innerHTML = 'Cargar RS';
+        });
+    });
+</script>
+
 </body>
 </html>

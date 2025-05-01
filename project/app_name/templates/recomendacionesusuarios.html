@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub - Recomendaciones por Usuario</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #1b263b;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --gray: #adb5bd;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 20px;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background-color: white;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        h1 {
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .users-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        
+        .user-btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 15px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+        
+        .user-btn:hover {
+            background-color: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+        
+        .user-btn.active {
+            background-color: var(--secondary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.3);
+        }
+        
+        .recommendations-section {
+            display: none;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        .recommendations-section.active {
+            display: block;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .game-card {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #eee;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+        }
+        
+        .game-header {
+            height: 150px;
+            background-color: var(--light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .game-body {
+            padding: 15px;
+        }
+        
+        .game-name {
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .game-score {
+            background-color: var(--success);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            display: inline-block;
+        }
+        
+        .no-recommendations {
+            text-align: center;
+            padding: 30px;
+            background-color: var(--light);
+            border-radius: 8px;
+            color: var(--gray);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @media (max-width: 768px) {
+            .users-grid {
+                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            }
+            
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1><i class="fas fa-users"></i> Recomendaciones por Usuario</h1>
+        
+        <div class="users-grid">
+            {% for usuario in usuarios %}
+            <button class="user-btn" onclick="showRecommendations('{{ usuario.id }}', this)">
+                <i class="fas fa-user"></i> {{ usuario.username }}
+            </button>
+            {% endfor %}
+        </div>
+        
+        {% for usuario in usuarios %}
+        <div id="recommendations-{{ usuario.id }}" class="recommendations-section">
+            <h2>Recomendaciones para <strong>{{ usuario.username }}</strong></h2>
+            
+            {% with recomendaciones=usuario.recomendaciones %}
+                {% if recomendaciones %}
+                <div class="games-grid">
+                    {% for juego in recomendaciones %}
+                    <div class="game-card">
+                        <div class="game-header">
+                            {% if juego.img %}
+                                <img src="{{ juego.img }}" alt="{{ juego.nombre }}" style="max-height:100%; max-width:100%; object-fit:contain;">
+                            {% else %}
+                                <i class="fas fa-gamepad fa-3x" style="color: var(--primary);"></i>
+                            {% endif %}
+                        </div>
+                        <div class="game-body">
+                            <h3 class="game-name">{{ juego.nombre }}</h3>
+                            <span class="game-score">{{ juego.score|floatformat:1 }}% de coincidencia</span>
+                            <a href="{{ juego.url }}" target="_blank" style="display:block; margin-top:10px; color:var(--accent);">
+                                <i class="fas fa-external-link-alt"></i> Ver en GOG
+                            </a>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="no-recommendations">
+                    <i class="far fa-frown fa-2x"></i>
+                    <p>No hay recomendaciones disponibles para este usuario</p>
+                    <small>El usuario necesita haber valorado algunos juegos primero</small>
+                </div>
+                {% endif %}
+            {% endwith %}
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function showRecommendations(userId, button) {
+            // Oculta todas las secciones de recomendaciones
+            document.querySelectorAll('.recommendations-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Desactiva todos los botones
+            document.querySelectorAll('.user-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            // Muestra la sección correspondiente y activa el botón
+            document.getElementById(`recommendations-${userId}`).classList.add('active');
+            button.classList.add('active');
+        }
+        
+        // Mostrar el primer usuario por defecto
+        document.addEventListener('DOMContentLoaded', function() {
+            const firstButton = document.querySelector('.user-btn');
+            if (firstButton) {
+                firstButton.click();
+            }
+        });
+    </script>
+</body>
+</html>

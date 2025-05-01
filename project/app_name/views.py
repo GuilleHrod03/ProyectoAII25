@@ -3,7 +3,7 @@
 from django.http import JsonResponse
 from django.views.decorators.http import require_POST
 import sqlite3
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from .AII import almacenar_datos 
 from django.views.decorators.csrf import csrf_exempt
 from whoosh.index import open_dir
@@ -13,6 +13,8 @@ from whoosh.query import Regex, Term, NumericRange, Every, And
 from whoosh import sorting
 from whoosh.qparser import MultifieldParser
 from whoosh import qparser
+from .recommendations import load_similarities
+from app_name.recommendations import recommend_for_user
 
 def menu(request):
     # Puedes añadir lógica adicional aquí si necesitas mostrar algún dato especial
@@ -203,4 +205,46 @@ def filtrado(request):
         'sistemas': sistemas,
         'filtros_activos': filtros_activos,
         'hay_filtros': hay_filtros
+    })
+
+@csrf_exempt
+@require_POST
+def cargar_recomendaciones(request):
+    try:
+        load_similarities()
+        return JsonResponse({
+            'success': True,
+            'message': 'Sistema de recomendación cargado correctamente'
+        })
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=500)
+
+def ver_recomendaciones(request):
+    if not request.user.is_authenticated:
+        return redirect('login')
+    
+    recomendaciones = recommend_for_user(request.user.id)
+    return render(request, 'recomendaciones.html', {
+        'recomendaciones': recomendaciones
+    })
+from django.shortcuts import render
+from django.contrib.auth.models import User
+from app_name.recommendations import recommend_for_user
+
+def recomendacionesusuarios(request):
+    # Obtener todos los usuarios
+    usuarios = User.objects.all()
+    
+    # Pre-cargar recomendaciones para cada usuario
+    usuarios_con_recomendaciones = []
+    for usuario in usuarios:
+        recomendaciones = recommend_for_user(usuario.id)
+        usuario.recomendaciones = recomendaciones  # Añadir atributo dinámico
+        usuarios_con_recomendaciones.append(usuario)
+    
+    return render(request, 'recomendacionesusuarios.html', {
+        'usuarios': usuarios_con_recomendaciones
     })

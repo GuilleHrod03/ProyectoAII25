@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameHub - Recomendaciones</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #4361ee;
+            --secondary: #3f37c9;
+            --accent: #4895ef;
+            --dark: #1b263b;
+            --light: #f8f9fa;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --gray: #adb5bd;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f2f5;
+            margin: 0;
+            padding: 0;
+            color: var(--dark);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .header-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+        
+        h1, h2, h3 {
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .subtitle {
+            text-align: center;
+            font-weight: 300;
+            margin-top: 0.5rem;
+            opacity: 0.9;
+        }
+        
+        /* Estilos para los resultados */
+        .results-section {
+            margin-top: 30px;
+        }
+        
+        .results-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .results-count {
+            color: var(--gray);
+            font-size: 0.9rem;
+        }
+        
+        .games-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .game-card {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .game-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+        
+        .game-header {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+        
+        .game-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .game-card:hover .game-image {
+            transform: scale(1.03);
+        }
+        
+        .no-image {
+            background: linear-gradient(45deg, #3a0ca3, #4361ee);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+        
+        .game-body {
+            padding: 20px;
+        }
+        
+        .game-name {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--dark);
+        }
+        
+        .game-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .relevance-badge {
+            background-color: var(--success);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .menu-btn {
+            display: inline-block;
+            background-color: var(--accent);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 500;
+            margin-top: 10px;
+            transition: all 0.3s ease;
+            text-align: center;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        .menu-btn:hover {
+            background-color: var(--primary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 50px;
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        
+        .no-results-icon {
+            font-size: 3rem;
+            color: var(--gray);
+            margin-bottom: 20px;
+        }
+        
+        .logo-link a {
+            color: inherit;
+            text-decoration: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .logo-link a:hover {
+            opacity: 0.9;
+        }
+        
+        @media (max-width: 768px) {
+            .games-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <div class="header-content">
+                <h1 class="logo-link">
+                    <a href="{% url 'menu' %}">GameHub</a>
+                </h1>
+                <p class="subtitle">Recomendaciones personalizadas</p>
+            </div>
+        </div>
+    </header>
+    
+    <div class="container">
+        <div class="results-section">
+            <div class="results-header">
+                <h2>Tus recomendaciones personalizadas</h2>
+                {% if recomendaciones %}
+                <span class="results-count">{{ recomendaciones|length }} sugerencias</span>
+                {% endif %}
+            </div>
+            
+            {% if recomendaciones %}
+            <div class="games-grid">
+                {% for juego in recomendaciones %}
+                <div class="game-card">
+                    <div class="game-header">
+                        {% if juego.img %}
+                            <img src="{{ juego.img }}" alt="{{ juego.nombre }}" class="game-image">
+                        {% else %}
+                            <div class="no-image">
+                                <i class="fas fa-gamepad fa-3x"></i>
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="game-body">
+                        <h3 class="game-name">{{ juego.nombre }}</h3>
+                        
+                        <div class="game-meta">
+                            <span class="relevance-badge">Relevancia: {{ juego.score }}%</span>
+                        </div>
+                        
+                        <a href="{{ juego.url }}" class="menu-btn" target="_blank">
+                            <i class="fas fa-external-link-alt"></i> Ver detalles
+                        </a>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="no-results">
+                <div class="no-results-icon">
+                    <i class="far fa-frown"></i>
+                </div>
+                <h3>No hay recomendaciones disponibles</h3>
+                <p>El sistema de recomendación necesita más datos para personalizar tus sugerencias.</p>
+                <a href="{% url 'menu' %}" class="menu-btn" style="margin-top: 20px;">
+                    <i class="fas fa-arrow-left"></i> Volver al inicio
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</body>
+</html>
